@@ -9,19 +9,49 @@ private:
 	double speed = 750.0;          // 移動速度（ピクセル/秒）
 	double targetScale = 1.0;      // スケーリング目標
 	double currentScale = 1.0;     // 現在のスケーリング
-	Texture texture{ U"example/image/無題.png" }; // ← ここで固定指定
+	Texture texture{ U"example/image/player.png" }; // ← ここで固定指定
 	int32 maxHp = 100;
 	int32 currentHp = 100;
 	bool alive = true;
 
-	double radius = 30.0;  // 当たり判定用半径
-	const double baseRadius = 30.0; // 元の半径
+	double radius = 40.0;  // 当たり判定用半径
+	const double baseRadius = 40.0; // 元の半径
+
+	double healCooldown = 1.0;     // 回復間隔（秒）
+	double healTimer = 0.0;        // 前回回復からの経過時間
+
+	double shakeTimer = 0.0;         // 揺れ時間管理
+	double shakeStrength = 0.0;      // 揺れの強さ
+	Vec2 shakeOffset{ 0,0 };         // 揺れのオフセット（位置に加算）
+
+	Texture textureHeal{ U"example/image/healing2.png" };
+
 
 public:
+	//Player_oya();
 
 	// --- 移動・更新 ---
 	void update(double delta)
 	{
+		healTimer += delta; // 経過時間をカウント
+
+		// --- 揺れ制御 ---
+		if (shakeTimer > 0.0)
+		{
+			shakeTimer -= delta;
+			shakeStrength = Math::Lerp(shakeStrength, 0.0, delta * 5.0);
+
+			// ランダムな微振動
+			shakeOffset = Vec2(Random(-shakeStrength, shakeStrength),
+							   Random(-shakeStrength, shakeStrength));
+		}
+		else
+		{
+			shakeStrength = 0.0;
+			shakeOffset = Vec2(0, 0);
+		}
+
+
 		Vec2 move{ 0,0 };
 		if (KeyW.pressed()) move.y -= speed;
 		if (KeyS.pressed()) move.y += speed;
@@ -62,7 +92,7 @@ public:
 	// --- 描画 ---
 	void draw() const
 	{
-		texture.resized(size).drawAt(pos);
+		texture.resized(size).drawAt(pos + shakeOffset);
 		Circle(pos, radius).drawFrame(2, Palette::Red);
 
 	}
@@ -74,15 +104,41 @@ public:
 		alive = (currentHp > 0);
 		targetScale = Min(targetScale + amount / 100.0, 1.0);
 		radius = baseRadius * targetScale;
+
+	}
+
+	// --- 一定間隔でのみ回復 ---
+	void inAreaHeal_size(int32 amount)
+	{
+		if (healTimer >= healCooldown) // ← 1秒経ったら回復OK
+		{
+			heal_size(amount);
+			healTimer = 0.0; // タイマーリセット
+		}
+		double angle = Scene::Time() * 2.0; // 2.0 は回転速度（ラジアン/秒）
+		textureHeal.rotated(-angle).drawAt(pos);
+
+
 	}
 
 	void damage_size(int32 amount)
 	{
+
 		currentHp = Max(currentHp - amount, 0);
 		alive = (currentHp > 0);
 		targetScale = Max(targetScale - amount / 100.0, 0.25);
 		radius = baseRadius * targetScale;
+		shakeTimer = 1.0;
+		shakeStrength = amount * 2;
+
 	}
+
+	// --- 当たり判定 ---
+	bool intersects(const Vec2& otherPos, double otherRadius) const
+	{
+		return (pos - otherPos).length() <= (radius + otherRadius);
+	}
+
 
 	// --- ゲッター ---
 	const Vec2& getPos() const { return pos; }
