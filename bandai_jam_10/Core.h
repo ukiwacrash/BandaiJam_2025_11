@@ -34,7 +34,7 @@ public:
 		Vec2 tr{ br.x + 5, br.y - height };
 		Vec2 tl{ bl.x + 5, bl.y - height };
 		Quad hpBar(tl, tr, br, bl);
-		hpBar.draw(Color(GAME_COLOR_BLUE));
+		hpBar.draw(Color(Palette::Blue));
 		hpBar.drawFrame(2, Palette::Black);
 
 
