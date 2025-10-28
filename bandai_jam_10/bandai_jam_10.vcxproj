@@ -329,8 +329,10 @@
   <ItemGroup>
     <ClInclude Include="Core.h" />
     <ClInclude Include="enemy.h" />
+    <ClInclude Include="enemyManager.h" />
     <ClInclude Include="environment.h" />
     <ClInclude Include="Main.h" />
+    <ClInclude Include="objectPool.h" />
     <ClInclude Include="player.h" />
     <ClInclude Include="stdafx.h" />
   </ItemGroup>
