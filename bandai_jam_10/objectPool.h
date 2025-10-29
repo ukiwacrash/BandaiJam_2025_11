@@ -2,12 +2,17 @@
 //--------------------------------------------
 // ObjectPool（汎用プールクラス）
 //--------------------------------------------
+
+#include <vector>
+#include <memory>
+#include <algorithm>
+#include <functional>
 template<class T>
 class ObjectPool
 {
 private:
-	std::vector<std::unique_ptr<T>> objects;
-	std::vector<T*> activeObjects;
+	std::vector<std::unique_ptr<T>> objects; // すべてのオブジェクト
+	std::vector<T*> activeObjects;           // 現在アクティブなオブジェクト
 	std::function<std::unique_ptr<T>()> factory;
 
 public:
@@ -28,6 +33,7 @@ public:
 				return obj.get();
 			}
 		}
+		// プールに空きがなければ新規生成
 		objects.push_back(factory());
 		activeObjects.push_back(objects.back().get());
 		return activeObjects.back();
@@ -63,5 +69,9 @@ public:
 		}
 	}
 
-	const std::vector<T*>& getActiveList() const { return activeObjects; }
+	// --- アクティブなオブジェクトをSiv3D Arrayで取得 ---
+	s3d::Array<T*> getActiveListArray() const
+	{
+		return s3d::Array<T*>(activeObjects.begin(), activeObjects.end());
+	}
 };

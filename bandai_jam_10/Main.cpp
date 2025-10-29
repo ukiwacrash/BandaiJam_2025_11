@@ -21,7 +21,7 @@ void Main()
 	EnemyManager enemyManager;
 
 	Stopwatch spawnTimer{ StartImmediately::Yes };
-	const double spawnInterval = 1.5;
+	const double spawnInterval = 0.5;
 
 	// --- 背景 ---
 	const Texture background{ U"example/image/GamePlayBack_TOD.png" };
@@ -62,7 +62,17 @@ void Main()
 
 		// --- 敵更新 ---
 		enemyManager.update(delta, core.getPos());
-		enemyManager.draw();
+		
+
+		for (auto* enemy : enemyManager.getActiveEnemies())
+		{
+			if (player.intersects(enemy->getPos(), enemy->getRadius()))
+			{
+				enemy->damage(100);
+			}
+		}
+		// 敵死亡処理はこのタイミングでまとめて
+		enemyManager.releaseDeadEnemies();
 
 		// --- プレイヤー処理 ---
 		player.heal_size((int32)delta);
@@ -74,6 +84,9 @@ void Main()
 		Circle(core.getPos(), core.getHealArea()).drawFrame(2, Palette::Green);
 
 		// --- プレイヤー描画 ---
+		enemyManager.draw();
 		player.draw();
+
+		
 	}
 }

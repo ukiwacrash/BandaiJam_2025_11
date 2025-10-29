@@ -67,6 +67,8 @@ public:
 		currentHp -= damage;
 		if (currentHp < 0) currentHp = 0;
 	}
+
+	double getRadius() const { return radius; }
 };
 
 //--------------------------------------------
