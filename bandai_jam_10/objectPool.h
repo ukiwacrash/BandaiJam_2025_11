@@ -2,55 +2,54 @@
 //--------------------------------------------
 // ObjectPool（汎用プールクラス）
 //--------------------------------------------
-template <class T>
+template<class T>
 class ObjectPool
 {
 private:
-	Array<std::unique_ptr<T>> pool;  // 未使用オブジェクト
-	Array<std::unique_ptr<T>> active; // 使用中オブジェクト
+	std::vector<std::unique_ptr<T>> objects;
+	std::vector<T*> activeObjects;
+	std::function<std::unique_ptr<T>()> factory;
 
 public:
-	ObjectPool() = default;
-
-	// --- 事前生成 ---
-	void reserve(size_t count, const std::function<std::unique_ptr<T>()>& generator)
+	void reserve(size_t count, std::function<std::unique_ptr<T>()> createFunc)
 	{
-		for (size_t i = 0; i < count; i++)
-		{
-			pool << generator();
-		}
+		factory = createFunc;
+		for (size_t i = 0; i < count; ++i)
+			objects.push_back(factory());
 	}
 
-	// --- 使用要求（enqueue） ---
 	T* acquire()
 	{
-		if (pool.isEmpty())
-			return nullptr;
-
-		std::unique_ptr<T> obj = std::move(pool.back());
-		pool.pop_back();
-
-		T* rawPtr = obj.get();
-		active << std::move(obj);
-
-		return rawPtr;
-	}
-
-	// --- 返却（dequeue） ---
-	void release(T* object)
-	{
-		// active → pool に戻す
-		auto it = std::find_if(active.begin(), active.end(),
-			[object](const std::unique_ptr<T>& ptr) { return ptr.get() == object; });
-
-		if (it != active.end())
+		for (auto& obj : objects)
 		{
-			pool << std::move(*it);
-			active.remove(it);
+			if (std::find(activeObjects.begin(), activeObjects.end(), obj.get()) == activeObjects.end())
+			{
+				activeObjects.push_back(obj.get());
+				return obj.get();
+			}
 		}
+		objects.push_back(factory());
+		activeObjects.push_back(objects.back().get());
+		return activeObjects.back();
 	}
 
-	// --- 死亡オブジェクトの自動返却 ---
+	void release(T* obj)
+	{
+		activeObjects.erase(std::remove(activeObjects.begin(), activeObjects.end(), obj), activeObjects.end());
+	}
+
+	void updateAll(double delta, const Vec2& playerPos)
+	{
+		for (auto* obj : activeObjects)
+			obj->update(delta, playerPos);
+	}
+
+	void drawAll() const
+	{
+		for (auto* obj : activeObjects)
+			obj->draw();
+	}
+
 	void releaseIfDead()
 	{
 		std::vector<T*> toRelease;
@@ -64,23 +63,5 @@ public:
 		}
 	}
 
-	// --- 更新・描画ヘルパー ---
-	void updateAll(double delta, const Vec2& playerPos)
-	{
-		for (auto& e : active)
-		{
-			e->update(delta, playerPos);
-		}
-	}
-
-	void drawAll() const
-	{
-		for (auto& e : active)
-		{
-			e->draw();
-		}
-	}
-
-	// --- アクティブ数 ---
-	size_t activeCount() const { return active.size(); }
+	const std::vector<T*>& getActiveList() const { return activeObjects; }
 };

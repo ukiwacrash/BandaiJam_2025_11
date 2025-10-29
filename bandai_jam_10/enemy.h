@@ -36,7 +36,7 @@ public:
 	// --- プールに返すべきか判定 ---
 	virtual bool isDead() const
 	{
-		// 画面外またはHPゼロなら返却
+		// HPゼロなら返却
 		return (currentHp <= 0);
 	}
 
