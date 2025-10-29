@@ -61,6 +61,12 @@ public:
 	{
 		texture.resized(size).drawAt(pos);
 	}
+
+	virtual void damage(int32 damage)
+	{
+		currentHp -= damage;
+		if (currentHp < 0) currentHp = 0;
+	}
 };
 
 //--------------------------------------------
