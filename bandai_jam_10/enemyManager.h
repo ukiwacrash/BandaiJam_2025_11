@@ -19,10 +19,10 @@ private:
 public:
 	EnemyManager()
 	{
-		moneyPool.reserve(10, [this]() { return std::make_unique<Money>(texMoney); });
-		greedPool.reserve(10, [this]() { return std::make_unique<Greed>(texGreed); });
-		sakePool.reserve(10, [this]() { return std::make_unique<Sake>(texSake); });
-		circlePool.reserve(10, [this]() { return std::make_unique<CircleEnemy>(texCircle); });
+		moneyPool.reserve(100, [this]() { return std::make_unique<Money>(texMoney); });
+		greedPool.reserve(100, [this]() { return std::make_unique<Greed>(texGreed); });
+		sakePool.reserve(100, [this]() { return std::make_unique<Sake>(texSake); });
+		circlePool.reserve(100, [this]() { return std::make_unique<CircleEnemy>(texCircle); });
 	}
 
 	void spawnMoney() { moneyPool.acquire(); }

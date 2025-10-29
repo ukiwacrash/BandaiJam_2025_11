@@ -17,20 +17,7 @@ public:
 	Enemy(const Texture& tex, const String& n, int32 hp, double spd, double rds = 50.0f)
 		: texture(tex), name(n), maxHp(hp), currentHp(hp), speed(spd), radius(rds)
 	{
-		// --- 画面端ランダム生成 ---
-		int side = Random(0, 3); // 0:上 1:下 2:左 3:右
-
-		auto Rand = [](double min, double max) {
-			return static_cast<double>(Random(static_cast<int32>(min), static_cast<int32>(max)));
-			};
-
-		switch (side)
-		{
-		case 0: pos = { Rand(0, Scene::Width()), -size.y }; break;
-		case 1: pos = { Rand(0, Scene::Width()), Scene::Height() + size.y }; break;
-		case 2: pos = { -size.x, Rand(0, Scene::Height()) }; break;
-		case 3: pos = { Scene::Width() + size.x, Rand(0, Scene::Height()) }; break;
-		}
+		pos = randomStartPosition();
 	}
 
 	// --- プールに返すべきか判定 ---
@@ -56,6 +43,27 @@ public:
 	// --- 位置取得 ---
 	const Vec2& getPos() const { return pos; }
 
+	// --- 位置取得 ---
+	Vec2 randomStartPosition() 
+	{
+		// --- 画面端ランダム生成 ---
+		int side = Random(0, 3); // 0:上 1:下 2:左 3:右
+
+		auto Rand = [](double min, double max) {
+			return static_cast<double>(Random(static_cast<int32>(min), static_cast<int32>(max)));
+			};
+
+		switch (side)
+		{
+		case 0: pos = { Rand(0, Scene::Width()), -size.y }; break;
+		case 1: pos = { Rand(0, Scene::Width()), Scene::Height() + size.y }; break;
+		case 2: pos = { -size.x, Rand(0, Scene::Height()) }; break;
+		case 3: pos = { Scene::Width() + size.x, Rand(0, Scene::Height()) }; break;
+		}
+
+		return pos;
+	}
+
 	// --- 描画処理 ---
 	virtual void draw() const
 	{
@@ -68,7 +76,14 @@ public:
 		if (currentHp < 0) currentHp = 0;
 	}
 
+	virtual void reset() {
+		currentHp = maxHp;
+		pos = randomStartPosition(); // 画面端ランダム生成
+	}
+
 	double getRadius() const { return radius; }
+
+	int32 getCurrentHp() const { return currentHp; }
 };
 
 //--------------------------------------------

@@ -16,6 +16,7 @@ void Main()
 
 	// --- コア ---
 	Core core(100);
+	Font font(24);
 
 	// --- 敵管理 ---
 	EnemyManager enemyManager;
@@ -70,6 +71,10 @@ void Main()
 			{
 				enemy->damage(100);
 			}
+
+			enemy->getCurrentHp();
+
+			font(enemy->getCurrentHp()).drawAt(enemy->getPos() - Vec2(0, enemy->getRadius() + 10), Palette::White);
 		}
 		// 敵死亡処理はこのタイミングでまとめて
 		enemyManager.releaseDeadEnemies();
@@ -87,6 +92,5 @@ void Main()
 		enemyManager.draw();
 		player.draw();
 
-		
-	}
+			}
 }

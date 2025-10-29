@@ -29,12 +29,14 @@ public:
 		{
 			if (std::find(activeObjects.begin(), activeObjects.end(), obj.get()) == activeObjects.end())
 			{
+				obj->reset();
 				activeObjects.push_back(obj.get());
 				return obj.get();
 			}
 		}
 		// プールに空きがなければ新規生成
 		objects.push_back(factory());
+		objects.back()->reset();
 		activeObjects.push_back(objects.back().get());
 		return activeObjects.back();
 	}
