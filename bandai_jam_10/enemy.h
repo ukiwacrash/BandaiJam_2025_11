@@ -159,3 +159,108 @@ public:
 		pos.x += Math::Cos(t * 2.0) * 1.5;
 	}
 };
+
+//--------------------------------------------
+// SmartEnemy（複合行動型）
+//--------------------------------------------
+class SmartEnemy : public Enemy
+{
+private:
+	double t = 0.0;           // 内部タイマー
+	double dashCooldown = 1.0; // 突進間隔
+	double dashTimer = 0.0;
+	double speedNormal = 80.0;
+	double speedDash = 200.0;
+	bool dashing = false;
+
+public:
+	SmartEnemy(const Texture& tex)
+		: Enemy(tex, U"Smart", 150, 0.0)
+	{
+		speed = speedNormal;
+	}
+
+	void update(double delta, const Vec2& playerPos) override
+	{
+		t += delta;
+		dashTimer += delta;
+
+		Vec2 toPlayer = (playerPos - pos);
+		double distance = toPlayer.length();
+
+		// --- 突進判定 ---
+		if (dashTimer >= dashCooldown)
+		{
+			dashing = true;
+			dashTimer = 0.0;
+		}
+
+		if (dashing)
+		{
+			Vec2 dir = toPlayer.normalized();
+			pos += dir * speedDash * delta;
+
+			// 突進終了判定
+			if (distance < 100.0) dashing = false;
+		}
+		else
+		{
+			// --- 円運動＋追尾 ---
+			Vec2 dir = toPlayer.normalized();
+			Vec2 perp = Vec2(-dir.y, dir.x); // 垂直方向
+			pos += dir * speedNormal * delta + perp * Math::Sin(t * 3.0) * 30.0 * delta;
+		}
+
+		// 画面端制限
+		pos.x = Clamp(pos.x, size.x / 2.0, Scene::Width() - size.x / 2.0);
+		pos.y = Clamp(pos.y, size.y / 2.0, Scene::Height() - size.y / 2.0);
+	}
+
+	void draw() const override
+	{
+		if (dashing)
+		{
+			// 突進時は赤く光らせる
+			texture.resized(size).drawAt(pos).drawFrame(4, Palette::Red);
+		}
+		else
+		{
+			texture.resized(size).drawAt(pos);
+		}
+	}
+};
+
+//--------------------------------------------
+// BlinkEnemy（点滅しながら動く敵）
+//--------------------------------------------
+class BlinkEnemy : public Enemy
+{
+private:
+	double t = 0.0;         // 時間経過
+	double blinkSpeed = 5.0; // 点滅の速さ
+	double alpha = 1.0;     // 現在の透明度
+
+public:
+	BlinkEnemy(const Texture& tex)
+		: Enemy(tex, U"Blink", 80, 80.0)
+	{
+	}
+
+	void update(double delta, const Vec2& playerPos) override
+	{
+		t += delta;
+
+		// --- 点滅処理 ---
+		alpha = (Math::Sin(t * blinkSpeed) * 0.5 + 0.5); // 0〜1の範囲で周期的に変化
+
+		// --- プレイヤーへ追尾 ---
+		Vec2 dir = (playerPos - pos).normalized();
+		pos += dir * speed * delta;
+	}
+
+	void draw() const override
+	{
+		ColorF color(1.0, 1.0, 1.0, alpha); // alpha値を透過に使う
+		texture.resized(size).drawAt(pos, color);
+	}
+};

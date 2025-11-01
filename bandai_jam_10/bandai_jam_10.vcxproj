@@ -116,7 +116,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="enemy.cpp" />
-    <ClCompile Include="Main.cpp" />
+    <ClCompile Include="ka_main.cpp" />
     <ClCompile Include="player.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
@@ -334,6 +334,7 @@
     <ClInclude Include="Main.h" />
     <ClInclude Include="objectPool.h" />
     <ClInclude Include="player.h" />
+    <ClInclude Include="sound.h" />
     <ClInclude Include="stdafx.h" />
   </ItemGroup>
   <ItemGroup>
