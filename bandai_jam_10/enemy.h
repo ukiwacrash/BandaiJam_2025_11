@@ -117,7 +117,7 @@ public:
 	Texture texture;
 	String name;
 	//コンストラクタ修正版			//hp=100がダメやった　（後で消して）
-	Enemy(const Texture& tex, const String& n, int32 hp, double spd, double rds)
+	Enemy(const Texture& tex, const String& n, int32 hp, double spd, double rds = 50)
 		: texture(tex), name(n), maxHp(hp), currentHp(hp), speed(spd), radius(rds)
 	{
 		// --- 画面端ランダム生成 ---
@@ -157,7 +157,7 @@ public:
 	Slime(const Texture& tex)
 		: Enemy(tex, U"Slime", 80, 30.0, 60.0) // ✅ 引数をすべて渡す
 	{
-		size = Vec2(80, 80);
+		size = Vec2(100, 100);
 	}
 };
 
@@ -170,9 +170,9 @@ class Bat : public Enemy
 
 public:
 	Bat(const Texture& tex)
-		: Enemy(tex, U"Bat", 100, 120.0, 40.0)
+		: Enemy(tex, U"Bat", 100, 120.0)
 	{
-		size = Vec2(50, 50);
+		size = Vec2(100, 100);
 	}
 
 	void update(double delta, const Vec2& playerPos) override
@@ -193,14 +193,14 @@ class Ghost : public Enemy
 
 public:
 	Ghost(const Texture& tex)
-		: Enemy(tex, U"Ghost", 60, 60.0, 30.0)
+		: Enemy(tex, U"Ghost", 60, 60.0)
 	{
-		size = Vec2(35, 35);
+		size = Vec2(100, 100);
 	}
 
 	void update(double delta, const Vec2& playerPos) override
 	{
-		t += delta * 2.0;
+		t += delta * 10.0;
 		Vec2 dir = (playerPos - pos).normalized();
 		pos += dir * speed * delta;
 		pos.y += Math::Sin(t * 2.0) * 1.5;
