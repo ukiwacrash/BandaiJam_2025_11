@@ -90,7 +90,7 @@ void UpdatePlayerAndCore(Player& player, Core& core, double delta, bool& isHeali
 		if (player.getHp() != player.getMaxHp() && core.getHp() > 1)
 		{
 			isHealing = true;
-			core.tryDamage(15);
+			core.tryDamage(10);
 			player.inAreaHeal_size(10);
 		}
 		else

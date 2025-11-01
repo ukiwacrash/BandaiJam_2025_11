@@ -199,7 +199,7 @@ public:
 		shakeTimer = 0.0;
 		shakeStrength = 0.0;
 		shakeOffset = Vec2(0, 0);
-		remainingFullHeal = 3;
+		remainingFullHeal = 5;
 	}
 
 	// --- ゲッター ---

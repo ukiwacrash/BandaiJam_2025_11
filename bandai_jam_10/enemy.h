@@ -233,15 +233,15 @@ public:
 
 	void draw() const override
 	{
-		if (dashing)
-		{
-			// 突進時は赤く光らせる
-			texture.resized(size).drawAt(pos).drawFrame(4, Palette::Red);
-		}
-		else
-		{
+		//if (dashing)
+		//{
+		//	// 突進時は赤く光らせる
+		//	texture.resized(size).drawAt(pos).drawFrame(4, Palette::Red);
+		//}
+		//else
+		//{
 			texture.resized(size).drawAt(pos);
-		}
+		//}
 	}
 };
 
