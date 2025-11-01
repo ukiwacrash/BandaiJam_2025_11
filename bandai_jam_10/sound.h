@@ -6,7 +6,8 @@ enum class BGMType
 	None,
 	Title,
 	Battle,
-	GameOver
+	GameOver,
+	GameClear,
 };
 
 struct BGMSlot
@@ -61,10 +62,11 @@ private:
 	// --- 効果音 ---
 	Audio seDamage;
 	Audio seHeal;
+	Audio seMouse;
 
 	// --- ボリューム設定 ---
-	double bgmVolume = 0.6;
-	double seVolume = 0.8;
+	double bgmVolume = 1.0;
+	double seVolume = 10.0;
 
 	// --- コンストラクタ（private）---
 	SoundManager()
@@ -73,9 +75,10 @@ private:
 		bgmMap[BGMType::Title] = BGMSlot{ Audio{ U"example/sound/BGM_Title_01.mp3", Loop::Yes }, 0.0, 0.0, 0.0, 0.0, false };
 		bgmMap[BGMType::Battle] = BGMSlot{ Audio{ U"example/sound/BGM_Play_01.mp3", Loop::Yes }, 0.0, 0.0, 0.0, 0.0, false };
 		bgmMap[BGMType::GameOver] = BGMSlot{ Audio{ U"example/sound/BGM_GameOver_01.mp3", Loop::Yes }, 0.0, 0.0, 0.0, 0.0, false };
-
+		bgmMap[BGMType::GameClear] = BGMSlot{Audio{ U"example/sound/Pokemon.mp3", Loop::Yes },	0.0, 0.0, 0.0, 0.0, false};
 		seDamage = Audio{ U"example/sound/SE_Damage.mp3" };
 		seHeal = Audio{ U"example/sound/SE_Heal.mp3" };
+		seMouse = Audio{ U"example/sound/decision7.wav" };
 
 		for (auto& [k, slot] : bgmMap)
 		{
@@ -169,6 +172,7 @@ public:
 	//--------------------------------------------
 	void playDamage() { seDamage.playOneShot(seVolume); }
 	void playHeal() { seHeal.playOneShot(seVolume); }
+	void MouseSe() { seMouse.playOneShot(seVolume); }
 
 	//--------------------------------------------
 	// 🎚 音量設定

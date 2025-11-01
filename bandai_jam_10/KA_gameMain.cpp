@@ -6,7 +6,7 @@
 
 #define ENEMYMAX 5
 
-void Main()
+void gameMain()
 {
 	Window::Resize(1280, 720);
 	Scene::SetBackground(Palette::Black);

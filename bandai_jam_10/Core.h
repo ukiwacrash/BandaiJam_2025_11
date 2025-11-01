@@ -21,6 +21,12 @@ private:
 	double shakeStrength = 0.0;      // 揺れの強さ
 	Vec2 shakeOffset{ 0,0 };         // 揺れのオフセット（位置に加算）
 
+	// --- 回復範囲 ---
+	double healAreaBase = 150.0;	 // 基本の回復範囲
+	double healAreaAmp = 50.0;		 // どのくらい変化するか
+	double healAreaTime = 0.0;		 // 経過時間
+
+
 public:
 	Core(int32 hp = 100)
 		: maxHp(hp), currentHp(hp)
@@ -121,20 +127,32 @@ public:
 	void autoHeal(double deltaTime)
 	{
 		if (currentHp == maxHp) return;
+		else if (currentHp <= 0)return;
 
 		healTimer += deltaTime;
-		if (healTimer >= 1.0)
+		if (healTimer >= 0.7)
 		{
-			heal(5);
+			heal(10);
 			healTimer = 0.0;
 		}
+	}
+
+	// --- 回復範囲の拡大縮小 ---
+	double getDynamicHealArea(double delta)
+	{
+		healAreaTime += delta;
+		return healAreaBase + healAreaAmp * Sin(healAreaTime * Math::TwoPi / 5.0);
 	}
 
 	// --- 判定系 ---
 	bool isAlive() const { return currentHp > 0; }
 	const Vec2& getPos() const { return pos; }
 	double getRadius() const { return radius; }
-	double getHealArea() const { return radius * 5; }
+	double getHealArea() const { return healAreaBase + healAreaAmp * Sin(healAreaTime * Math::TwoPi / 5.0); }
 	double getHp() const { return currentHp; }
 	double getMaxHp() const { return maxHp; }
+	Vec2 getShakeOffset() const { return shakeOffset * 2; }
+
+	void setHP(const double& hp) { currentHp = hp; }
+
 };

@@ -13,12 +13,12 @@ private:
 	ObjectPool<BlinkEnemy> blinkPool;
 
 	// 共通テクスチャ
-	Texture texMoney{ U"example/image/無題.png" };
-	Texture texGreed{ U"example/image/無題.png" };
-	Texture texSake{ U"example/image/無題.png" };
-	Texture texCircle{ U"example/image/aaa.jpg" };
-	Texture texSmart{ U"example/image/aaa.jpg" };
-	Texture texBlink{ U"example/image/aaa.jpg" };
+	Texture texMoney{ U"example/image/欲.png" };
+	Texture texGreed{ U"example/image/悪.png" };
+	Texture texSake{ U"example/image/煙.png" };
+	Texture texCircle{ U"example/image/金.png" };
+	Texture texSmart{ U"example/image/酒.png" };
+	Texture texBlink{ U"example/image/病.png" };
 
 public:
 	EnemyManager()
@@ -81,6 +81,20 @@ public:
 		circlePool.releaseIfDead();
 		smartPool.releaseIfDead();
 		blinkPool.releaseIfDead();
+	}
+
+	void resetAll()
+	{
+		// 各プールの全アクティブ敵をリセット
+		for (auto* e : moneyPool.getActiveListArray())   e->reset();
+		for (auto* e : greedPool.getActiveListArray())   e->reset();
+		for (auto* e : sakePool.getActiveListArray())    e->reset();
+		for (auto* e : circlePool.getActiveListArray())  e->reset();
+		for (auto* e : smartPool.getActiveListArray())   e->reset();
+		for (auto* e : blinkPool.getActiveListArray())   e->reset();
+
+		// 死んでいる敵をプールに戻す
+		releaseDeadEnemies();
 	}
 };
 

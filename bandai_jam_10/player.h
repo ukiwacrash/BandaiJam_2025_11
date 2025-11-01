@@ -10,12 +10,14 @@ private:
 	double targetScale = 1.0;      // スケーリング目標
 	double currentScale = 1.0;     // 現在のスケーリング
 	Texture texture{ U"example/image/player.png" }; // ← ここで固定指定
-	int32 maxHp = 100;
-	int32 currentHp = 100;
+	int32 maxHp = 200;
+	int32 currentHp = 200;
+
 	bool alive = true;
 
 	double radius = 40.0;  // 当たり判定用半径
 	const double baseRadius = 40.0; // 元の半径
+	double attackArea = 40.0;	//攻撃の範囲
 
 	double healCooldown = 1.0;     // 回復間隔（秒）
 	double healTimer = 0.0;        // 前回回復からの経過時間
@@ -24,16 +26,20 @@ private:
 	double shakeStrength = 0.0;      // 揺れの強さ
 	Vec2 shakeOffset{ 0,0 };         // 揺れのオフセット（位置に加算）
 
-	Texture textureHeal{ U"example/image/healing2.png" };
+	Texture textureHeal{ U"example/image/healing2.png" };	//回復中のエフェクト
+
 
 
 public:
+	int32 remainingFullHeal = 5;	//完全回復できる回数
+
 	//Player_oya();
 
 	// --- 移動・更新 ---
 	void update(double delta)
 	{
 		healTimer += delta; // 経過時間をカウント
+		if (currentHp <= 0) return;
 
 		// --- 揺れ制御 ---
 		if (shakeTimer > 0.0)
@@ -60,7 +66,7 @@ public:
 
 		// --- 斜め移動でも速度を同じにする ---
 		if (move.lengthSq() > 0)
-			pos.moveBy(move.normalized() * speed * delta);
+			pos.moveBy(move.normalized() * speed * delta*2);
 
 		// --- マウス追従 ---
 		else if (MouseL.pressed())
@@ -69,10 +75,10 @@ public:
 			double dist = dir.length();
 			if (dist > 4.0)
 			{
-				pos += dir.normalized() * speed * delta;
+				pos += dir.normalized() * speed * delta*2;
 			}
-		}
 
+		}
 		// 画面内制限
 		double halfW = size.x / 2.0;
 		double halfH = size.y / 2.0;
@@ -92,17 +98,33 @@ public:
 	// --- 描画 ---
 	void draw() const
 	{
+		if (currentHp <= 0) return;
+
 		texture.resized(size).drawAt(pos + shakeOffset);
-		Circle(pos, radius).drawFrame(2, Palette::Red);
+		double hpRate = static_cast<double>(getHp()) / getMaxHp();
+		ColorF hitColor;
+		if (hpRate > 0.8) hitColor = Palette::Green;
+		else if (hpRate > 0.5) hitColor = Palette::Yellow;
+		else if (hpRate > 0.2) hitColor = ColorF{ 1.0, 0.5, 0.0 }; // オレンジ
+		else hitColor = Palette::Red;
+		Circle(pos, radius).drawFrame(2, hitColor);
+
+		//Circle(pos, getAttackArea()).drawFrame(2, Palette::Red);
+		FontAsset::Register(U"BigFont", 50, Typeface::Bold); // 40pxの太字
+
+		FontAsset(U"BigFont")(U"[E] 完全回復×{}回"_fmt(remainingFullHeal)).draw(50, 20, Palette::Yellow);
+		FontAsset(U"BigFont")(U"[Q] ポーズ").draw(50, 70, Palette::Yellow);
 
 	}
 
 	// --- HP操作 ---
 	void heal_size(int32 amount)
 	{
+		if (currentHp <= 0) return;
+
 		currentHp = Min(currentHp + amount, maxHp);
 		alive = (currentHp > 0);
-		targetScale = Min(targetScale + amount / 100.0, 1.0);
+		targetScale = Min(targetScale + amount / static_cast<double>(maxHp), 1.0);
 		radius = baseRadius * targetScale;
 
 	}
@@ -110,6 +132,8 @@ public:
 	// --- 一定間隔でのみ回復 ---
 	void inAreaHeal_size(int32 amount)
 	{
+		if (currentHp <= 0) return;
+
 		if (healTimer >= healCooldown) // ← 1秒経ったら回復OK
 		{
 			heal_size(amount);
@@ -123,15 +147,37 @@ public:
 
 	void damage_size(int32 amount)
 	{
+		if (currentHp <= 0) return;
 
 		currentHp = Max(currentHp - amount, 0);
 		alive = (currentHp > 0);
-		targetScale = Max(targetScale - amount / 100.0, 0.25);
+		targetScale = Max(targetScale - amount / static_cast<double>(maxHp), 0.25);
 		radius = baseRadius * targetScale;
-		shakeTimer = 1.0;
-		shakeStrength = amount * 2;
+		//shakeTimer = 1.0;
+		//shakeStrength = amount*5;
+		// HP割合を計算（0～1）
+		double hpRate = static_cast<double>(currentHp) / maxHp;
 
+		// HPが少ないほど揺れが大きくなる
+		shakeTimer = 1.0;
+		shakeStrength = amount * 5 * (1.5 + (1.0 - hpRate)); // HPが減るほど1+(1-hpRate)で増幅
 	}
+
+	// --- 完全回復 ---
+	void useFullHeal()
+	{
+		if (currentHp <= 0) return;
+
+		if (remainingFullHeal > 0) {
+			currentHp = maxHp;
+			remainingFullHeal--;
+			// サイズも最大に戻す
+			targetScale = 1.0;
+			radius = baseRadius * targetScale;
+
+		}
+	}
+
 
 	// --- 当たり判定 ---
 	bool intersects(const Vec2& otherPos, double otherRadius) const
@@ -139,6 +185,22 @@ public:
 		return (pos - otherPos).length() <= (radius + otherRadius);
 	}
 
+	// --- 初期化 ---
+	void reset()
+	{
+		pos = Vec2(380, 280);
+		size = baseSize;
+		currentHp = maxHp;
+		alive = true;
+		targetScale = 1.0;
+		currentScale = 1.0;
+		radius = baseRadius;
+		healTimer = 0.0;
+		shakeTimer = 0.0;
+		shakeStrength = 0.0;
+		shakeOffset = Vec2(0, 0);
+		remainingFullHeal = 3;
+	}
 
 	// --- ゲッター ---
 	const Vec2& getPos() const { return pos; }
@@ -148,9 +210,12 @@ public:
 	bool isAlive() const { return alive; }
 	//RectF getRect() const { return rect; }
 	double getRadius() const { return radius; }
+	double getAttackArea() const { return attackArea * 5; }
 
 
 	// --- セッター ---
 	void setPos(const Vec2& p) { pos = p; }
 	void setSpeed(double spd) { speed = spd; }
+
+
 };

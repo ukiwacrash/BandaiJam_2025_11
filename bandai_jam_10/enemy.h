@@ -1,5 +1,5 @@
 ﻿#pragma once
-
+#include"Core.h"
 class Enemy
 {
 protected:
@@ -7,10 +7,13 @@ protected:
 	Vec2 size{ 100, 100 };
 	int32 maxHp;
 	int32 currentHp;
-	double speed = 100.0;
+	double speed = 1;
 	double radius = 50;
 	Texture texture;
 	String name;
+
+	bool alive = true;
+
 public:
 
 	//コンストラクタ修正版			//hp=100がダメやった　（後で消して）
@@ -28,10 +31,10 @@ public:
 	}
 
 	// --- 更新 ---
-	virtual void update(double delta, const Vec2& playerPos)
+	virtual void update(double delta, const Vec2& CorePos)
 	{
-		Vec2 dir = (playerPos - pos).normalized();
-		pos += dir * speed * delta;
+		Vec2 dir = (CorePos - pos).normalized();
+		pos += dir * (speed*2) * delta;
 	}
 
 	// --- 当たり判定 ---
@@ -39,6 +42,14 @@ public:
 	{
 		return radius;
 	}
+
+	// 当たり判定用
+	bool intersects(const Vec2& otherPos, double otherRadius) const
+	{
+		return (pos - otherPos).length() <= (radius + otherRadius);
+	}
+
+
 
 	// --- 位置取得 ---
 	const Vec2& getPos() const { return pos; }
@@ -70,10 +81,10 @@ public:
 		texture.resized(size).drawAt(pos);
 	}
 
-	virtual void damage(int32 damage)
+	virtual void damage(int32 amount)
 	{
-		currentHp -= damage;
-		if (currentHp < 0) currentHp = 0;
+		currentHp = Max(currentHp - amount, 0);
+		if (currentHp <= 0) alive = false;
 	}
 
 	virtual void reset() {
@@ -110,12 +121,12 @@ public:
 		: Enemy(tex, U"Greed", 100, 120.0) {
 	}
 
-	void update(double delta, const Vec2& playerPos) override
+	void update(double delta, const Vec2& CorePos) override
 	{
 		t += delta * 5.0;
-		Vec2 dir = (playerPos - pos).normalized();
+		Vec2 dir = (CorePos - pos).normalized();
 		Vec2 zigzag = Vec2(Math::Sin(t) * 60, 0);
-		pos += (dir * speed * delta) + zigzag * delta;
+		pos += (dir * (speed * 2) * delta) + zigzag * delta;
 	}
 };
 
@@ -132,11 +143,11 @@ public:
 		: Enemy(tex, U"Sake", 60, 60.0) {
 	}
 
-	void update(double delta, const Vec2& playerPos) override
+	void update(double delta, const Vec2& CorePos) override
 	{
 		t += delta * 2.0;
-		Vec2 dir = (playerPos - pos).normalized();
-		pos += dir * speed * delta;
+		Vec2 dir = (CorePos - pos).normalized();
+		pos += dir * (speed * 2) * delta;
 		pos.y += Math::Sin(t * 2.0) * 1.5;
 	}
 };
@@ -154,11 +165,11 @@ public:
 		: Enemy(tex, U"Circle", 100, 100) {
 	}// speedは0、移動は独自制御
 
-	void update(double delta, const Vec2& playerPos) override
+	void update(double delta, const Vec2& CorePos) override
 	{
 		t += delta * 2.0;
-		Vec2 dir = (playerPos - pos).normalized();
-		pos += dir * speed * delta;
+		Vec2 dir = (CorePos - pos).normalized();
+		pos += dir * (speed*2) * delta;
 		pos.y += Math::Sin(t * 2.0) * 1.5;
 		pos.x += Math::Cos(t * 2.0) * 1.5;
 	}
@@ -184,12 +195,12 @@ public:
 		speed = speedNormal;
 	}
 
-	void update(double delta, const Vec2& playerPos) override
+	void update(double delta, const Vec2& CorePos) override
 	{
 		t += delta;
 		dashTimer += delta;
 
-		Vec2 toPlayer = (playerPos - pos);
+		Vec2 toPlayer = (CorePos - pos);
 		double distance = toPlayer.length();
 
 		// --- 突進判定 ---
@@ -250,7 +261,7 @@ public:
 	{
 	}
 
-	void update(double delta, const Vec2& playerPos) override
+	void update(double delta, const Vec2& CorePos) override
 	{
 		t += delta;
 
@@ -258,8 +269,8 @@ public:
 		alpha = (Math::Sin(t * blinkSpeed) * 0.5 + 0.5); // 0〜1の範囲で周期的に変化
 
 		// --- プレイヤーへ追尾 ---
-		Vec2 dir = (playerPos - pos).normalized();
-		pos += dir * speed * delta;
+		Vec2 dir = (CorePos - pos).normalized();
+		pos += dir * (speed * 2) * delta;
 	}
 
 	void draw() const override
@@ -268,3 +279,94 @@ public:
 		texture.resized(size).drawAt(pos, color);
 	}
 };
+
+// --- ボス構造体 ---
+class Boss
+{
+public:
+	Vec2 pos;    // 画面外（上）に最初は待機
+	Vec2 size{ 160, 160 };
+	double speed = 100.0;
+	bool alive = false;      // 出現フラグ
+	double radius = 100;
+
+	int32 maxHp;
+	int32 currentHp;
+
+	Texture texBoss;
+
+	// --- 出現演出用 ---
+	bool justSpawned = false;   // 出現した瞬間だけtrue
+	double spawnEffectTimer = 0.5; // エフェクトの持続時間（秒）
+
+
+	Boss(Vec2 startPos = Vec2{ 1280, -100 }, int32 hp = 100, double spd = 50.0)
+		: pos(startPos), maxHp(hp), currentHp(hp), speed(spd)
+	{
+		texBoss = Texture{ U"example/image/Boss.png" }; // ボス用画像
+	}
+
+	void update(const Vec2& playerPos, const Vec2& corePos, Core& core)
+	{
+		if (!alive) return;
+
+		Vec2 dir = (core.getPos() - pos).normalized();
+		pos += dir * speed * Scene::DeltaTime();
+
+		double distToCore = pos.distanceFrom(core.getPos());
+		if (distToCore < 100.0)
+		{
+			// core のHPを直接減らす
+			double newHP = core.getHp() - 10 * Scene::DeltaTime();
+			core.setHP(newHP);
+		}
+
+
+	}
+	void updateEffect(double delta)
+	{
+		if (justSpawned)
+		{
+			spawnEffectTimer -= delta;
+			if (spawnEffectTimer <= 0)
+				justSpawned = false; // エフェクト終了
+		}
+	}
+
+
+	void takeDamage(int amount)
+	{
+		currentHp = Max(currentHp - amount, 0);
+		if (currentHp <= 0) alive = false;
+
+	}
+	// 当たり判定用
+	bool intersects(const Vec2& otherPos, double otherRadius) const
+	{
+		return (pos - otherPos).length() <= (radius + otherRadius);
+	}
+
+
+	void draw() const
+	{
+		if (!alive) return;
+
+		// --- 出現エフェクト ---
+		if (justSpawned)
+		{
+			double scale = 1.0 + 0.5 * Sin((0.5 - spawnEffectTimer) * Math::Pi * 2); // 少し大きくなる
+			texBoss.scaled(scale).drawAt(pos);
+			// 輝きエフェクト
+			Circle(pos, radius * scale).drawFrame(4, Palette::Yellow);
+		}
+		else
+		{
+			texBoss.drawAt(pos);
+		}
+
+		Circle(pos, radius).drawFrame(2, Palette::Red); // 当たり判定枠
+	}
+	bool isAlive() const { return alive; }
+
+};
+
