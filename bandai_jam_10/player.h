@@ -66,7 +66,7 @@ public:
 
 		// --- 斜め移動でも速度を同じにする ---
 		if (move.lengthSq() > 0)
-			pos.moveBy(move.normalized() * speed * delta*2);
+			pos.moveBy(move.normalized() * speed * delta*3);
 
 		// --- マウス追従 ---
 		else if (MouseL.pressed())
@@ -75,7 +75,7 @@ public:
 			double dist = dir.length();
 			if (dist > 4.0)
 			{
-				pos += dir.normalized() * speed * delta*2;
+				pos += dir.normalized() * speed * delta*3;
 			}
 
 		}

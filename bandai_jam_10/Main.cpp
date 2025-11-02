@@ -90,7 +90,7 @@ void UpdatePlayerAndCore(Player& player, Core& core, double delta, bool& isHeali
 		if (player.getHp() != player.getMaxHp() && core.getHp() > 1)
 		{
 			isHealing = true;
-			core.tryDamage(10);
+			core.tryDamage(8);
 			player.inAreaHeal_size(10);
 		}
 		else
@@ -170,7 +170,7 @@ void UpdateEnemies(EnemyManager& enemyManager, Player& player, Core& core, doubl
 		if (enemy->intersects(core.getPos(), core.getRadius()))
 		{
 			sound.playDamage();
-			core.damage(5);
+			core.damage(10);
 			enemy->damage(100);
 		}
 
@@ -263,7 +263,10 @@ void ProtectCoreUpdate(Player& player, Core& core, EnemyManager& enemyManager,
 
 	// --- タイマー表示 ---
 	int remaining = Max(0, (int)(state.clearTime - state.nowTime));
+
+	// 通常の残り時間表示（右上など）
 	FontAsset(U"nowTime")(U"残り: {} 秒"_fmt(remaining)).draw(800, 20, Palette::Black);
+
 
 	//ボス不要になった/
 	{
@@ -325,6 +328,13 @@ void ProtectCoreUpdate(Player& player, Core& core, EnemyManager& enemyManager,
 	player.draw();
 	DrawUI(player);
 
+	// --- カウントダウン演出（残り3秒以下のとき） ---
+	if (remaining <= 3 && remaining > 0)
+	{
+		// 大きめのフォントで中央に描画
+		FontAsset(U"CountdownEnd")(remaining).drawAt(Scene::Center(), Palette::Red);
+	}
+
 	state.nowTime += delta;
 
 	// --- ゲームクリア条件 ---
@@ -379,6 +389,7 @@ void Main()
 {
 	// --- フォント登録 ---
 	FontAsset::Register(U"Countdown", 120, Typeface::Bold);
+	FontAsset::Register(U"CountdownEnd", 200, Typeface::Bold);
 	FontAsset::Register(U"nowTime", 80, Typeface::Bold);
 	FontAsset::Register(U"Normal", 30, Typeface::Bold);
 	Font font(24);
