@@ -468,12 +468,13 @@ void Main()
 			{
 				mode = GameMode::RULE;
 			}
-
+#if _DEBUG
 			if (KeyEnter.down())
 			{
 				InitGame(player, core, enemyManager, fade, state);
 				mode = GameMode::GAMECLEAR;
 			}
+#endif
 		}
 		break;
 
@@ -576,7 +577,7 @@ void Main()
 				initialized = true;
 			}
 
-			Scene::Rect().draw(ColorF{ 0.0, 0.0, 0.0, 0.2 });
+			Scene::Rect().draw(ColorF{ 0.0, 0.0, 0.0, 0.05 });
 
 			for (auto& s : sparkles)
 			{
