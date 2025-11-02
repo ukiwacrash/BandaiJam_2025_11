@@ -65,8 +65,8 @@ private:
 	Audio seMouse;
 
 	// --- ボリューム設定 ---
-	double bgmVolume = 2.0;
-	double seVolume = 10.0;
+	double bgmVolume = 0.2;
+	double seVolume = 1.0;
 
 	// --- コンストラクタ（private）---
 	SoundManager()
