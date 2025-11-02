@@ -116,8 +116,8 @@ void UpdatePlayerAndCore(Player& player, Core& core, double delta, bool& isHeali
 	{
 		healEffectTimer -= delta;
 		double alpha = healEffectTimer / 0.5; // フェードアウト
-		double size = player.getRadius() * (1.0 + (1.0 - alpha) * 5.0);
-		Circle(player.getPos(), size).drawFrame(4, ColorF(0.5, 1.0, 0.5, alpha));
+		double size = player.getRadius() * (1.0 + (1.0 - alpha) * 30.0);
+		Circle(player.getPos(), size).drawFrame(10, ColorF(0.5, 1.0, 0.5, alpha));
 	}
 
 	// --- プレイヤーとコアの衝突処理 ---
