@@ -72,10 +72,6 @@ private:
 	SoundManager()
 	{
 		// --- 音声ファイル ---
-		bgmMap[BGMType::Title] = BGMSlot{ Audio{ U"example/sound/BGM_Title_01.mp3", Loop::Yes }, 0.0, 0.0, 0.0, 0.0, false };
-		bgmMap[BGMType::Battle] = BGMSlot{ Audio{ U"example/sound/BGM_Play_01.mp3", Loop::Yes }, 0.0, 0.0, 0.0, 0.0, false };
-		bgmMap[BGMType::GameOver] = BGMSlot{ Audio{ U"example/sound/BGM_GameOver_01.mp3", Loop::Yes }, 0.0, 0.0, 0.0, 0.0, false };
-		bgmMap[BGMType::GameClear] = BGMSlot{Audio{ U"example/sound/Pokemon.mp3", Loop::Yes },	0.0, 0.0, 0.0, 0.0, false};
 		seDamage = Audio{ U"example/sound/SE_Damage.mp3" };
 		seHeal = Audio{ U"example/sound/SE_Heal.mp3" };
 		seMouse = Audio{ U"example/sound/decision7.wav" };
@@ -115,8 +111,25 @@ public:
 	//--------------------------------------------
 	// 🎵 BGM制御
 	//--------------------------------------------
+	String BGMPath(BGMType type)
+	{
+		switch (type)
+		{
+		case BGMType::Title: return U"example/sound/BGM_Title_01.ogg";
+		case BGMType::Battle: return U"example/sound/BGM_Play_01.ogg";
+		case BGMType::GameOver: return U"example/sound/BGM_GameOver_01.ogg";
+		case BGMType::GameClear: return U"example/sound/Pokemon.mp3";
+		default: return U"";
+		}
+	}
+
 	void playBGM(BGMType type, double fadeSec = 1.0)
 	{
+		if (!bgmMap.contains(type))
+		{
+			bgmMap[type] = BGMSlot{ Audio{ BGMPath(type), Loop::Yes } };
+		}
+
 		if (type == currentBGM) return;
 
 		// --- 現在のBGMをフェードアウト ---
